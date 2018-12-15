@@ -6,6 +6,8 @@ import (
     "runtime/debug"
     "testing"
     "math/rand"
+    "bytes"
+    "time"
 )
 
 func testConcurrentMap(
@@ -206,20 +208,20 @@ func TestFloat64Cmap(t *testing.T) {
     )
 }
 
-//func TestStringCmap(t *testing.T) {
-//    newCmap := func() ConcurrentMap {
-//        keyType := reflect.TypeOf(string(2))
-//        valueType := keyType
-//        return NewConcurrentMap(keyType, valueType)
-//    }
-//    testConcurrentMap(
-//        t,
-//        newCmap,
-//        func() interface{} { return genRandString() },
-//        func() interface{} { return genRandString() },
-//        reflect.String,
-//        reflect.String)
-//}
+func TestStringCmap(t *testing.T) {
+    newCmap := func() ConcurrentMap {
+        keyType := reflect.TypeOf(string(2))
+        valueType := keyType
+        return NewConcurrentMap(keyType, valueType)
+    }
+    testConcurrentMap(
+        t,
+        newCmap,
+        func() interface{} { return genRandString() },
+        func() interface{} { return genRandString() },
+        reflect.String,
+        reflect.String)
+}
 
 func BenchmarkConcurrentMap(b *testing.B) {
     keyType := reflect.TypeOf(int32(2))
@@ -274,4 +276,26 @@ func BenchmarkMap(b *testing.B) {
         keyType.Kind().String(), valueType.Kind().String())
     b.Logf("The length of %s value is %d.\n", mapType, ml)
     b.StartTimer()
+}
+
+func genRandString() string {
+    var buff bytes.Buffer
+    var prev string
+    var curr string
+    for i := 0; buff.Len() < 3; i++ {
+        curr = string(genRandAZAscii())
+        if curr == prev {
+            continue
+        }
+        prev = curr
+        buff.WriteString(curr)
+    }
+    return buff.String()
+}
+
+func genRandAZAscii() int {
+    min := 65 // A
+    max := 90 // Z
+    rand.Seed(time.Now().UnixNano())
+    return min + rand.Intn(max-min)
 }
