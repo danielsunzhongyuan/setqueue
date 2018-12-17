@@ -30,14 +30,23 @@ func (sq *MySetQueue) Add(message interface{}) error {
 }
 
 func (sq *MySetQueue) Get(handler Handler) error {
-    message := <- sq.data
-    sq.m.Remove(message)
-    if err := handler(message); err != nil {
-        log.Println("process message", message, "failed, then put it back")
-        sq.Add(message)
-        return PROCESS_FAILED
+    for {
+        select {
+        case message, ok := <-sq.data:
+            if !ok {
+                log.Println("SetQueue has been closed")
+                break
+            }
+            if err := handler(message); err != nil {
+                log.Println("process message", message, "failed, then put it back")
+                sq.m.Remove(message)
+                sq.Add(message)
+
+            }
+            sq.m.Remove(message)
+        }
     }
-    return nil
+    return QUEUE_CLOSED
 }
 
 func (sq *MySetQueue) Close() {

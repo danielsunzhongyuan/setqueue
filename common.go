@@ -8,6 +8,7 @@ import (
 var (
     KEY_EXISTS = errors.New("key already exists")
     PROCESS_FAILED = errors.New("process failed")
+    QUEUE_CLOSED = errors.New("queue been closed")
 )
 
 type Handler func(event interface{}) error
